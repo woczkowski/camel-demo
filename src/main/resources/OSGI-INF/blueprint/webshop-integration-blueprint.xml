@@ -50,8 +50,9 @@
                   xmlns:soap="http://www.w3.org/2003/05/soap-envelope" 
                   xsi:schemaLocation="http://camel.apache.org/schema/blueprint 
                     http://camel.apache.org/schema/blueprint/camel-blueprint.xsd"
-                  id="orders-context" streamCache="true">
-
+                  id="orders-context" streamCache="true"
+    >
+        
         <errorHandler id="orders-error-handler-dlq" 
                       type="DeadLetterChannel" 
                       deadLetterUri="activemq://DLQ.ordersQueue" 
@@ -67,6 +68,14 @@
             <redeliveryPolicy maximumRedeliveries="6" 
                               delayPattern="0:1000;3:5000;5:10000"/>
         </errorHandler>
+        
+        <restConfiguration component="jetty" host="localhost" port="8085"/>
+        
+        <rest path="/api">
+            <post uri="/orders">
+                <to uri="direct:placeOrders"/>
+            </post>
+        </rest>
                 
         <route id="orders-in">
             <from uri="from-webshop-ws"/>
@@ -137,5 +146,23 @@
                 <to uri="http://localhost:8084/sms/message"/>
             </idempotentConsumer>
         </route>
+
+        <route id="orders-in-rest">
+            <from uri="direct:placeOrders"/>
+            <split>
+                <xpath>/orders/order</xpath>
+                <to uri="xslt:xslt/wrapOrder.xsl"/>
+                <to uri="activemq://ordersQueue"/>
+            </split>
+            <setBody>
+                <constant>
+<![CDATA[
+                    <return/>
+]]> 
+                </constant>
+            </setBody>        
+        </route>
+        
+                        
     </camelContext>
 </blueprint>
