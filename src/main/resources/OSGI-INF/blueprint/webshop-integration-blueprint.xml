@@ -162,6 +162,5 @@
             </setBody>        
         </route>
         
-                        
     </camelContext>
 </blueprint>
