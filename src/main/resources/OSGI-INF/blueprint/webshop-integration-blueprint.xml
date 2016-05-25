@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.0.0"
+           xmlns:camel-cxf="http://camel.apache.org/schema/blueprint/cxf"
+           xmlns:cxfcore="http://cxf.apache.org/blueprint/core"
+           xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 http://osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+                               http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.0.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.0.0.xsd
+                               http://camel.apache.org/schema/blueprint/cxf http://camel.apache.org/schema/blueprint/cxf/camel-cxf.xsd
+                               http://cxf.apache.org/blueprint/core http://cxf.apache.org/schemas/blueprint/core.xsd">
+
+
+    <!-- webservice do WebShopa -->
+    <camel-cxf:cxfEndpoint id="from-webshop-ws"
+                           address="http://localhost:8081/camel-orders" 
+                           wsdlURL="wsdls/OrdersWebService.wsdl" >
+        <camel-cxf:properties>
+            <entry key="dataFormat" value="PAYLOAD"/>
+        </camel-cxf:properties>
+    </camel-cxf:cxfEndpoint>
+
+    <camel-cxf:cxfEndpoint id="to-webshop-ws"
+                           address="http://localhost:8082/webshop-status" 
+                           wsdlURL="wsdls/StatusWebService.wsdl" >
+        <camel-cxf:properties>
+            <entry key="dataFormat" value="PAYLOAD"/>
+        </camel-cxf:properties>
+    </camel-cxf:cxfEndpoint>
+
+    <camel-cxf:cxfEndpoint id="from-erp-ws"
+                           address="http://localhost:8083/camel-status" 
+                           wsdlURL="wsdls/StatusWebService.wsdl" >
+        <camel-cxf:properties>
+            <entry key="dataFormat" value="PAYLOAD"/>
+        </camel-cxf:properties>
+    </camel-cxf:cxfEndpoint>
+
+    <camel-cxf:cxfEndpoint id="to-erp-ws"
+                           address="http://localhost:8080/erp-orders" 
+                           wsdlURL="wsdls/OrdersWebService.wsdl" >
+        <camel-cxf:properties>
+            <entry key="dataFormat" value="PAYLOAD"/>
+        </camel-cxf:properties>
+    </camel-cxf:cxfEndpoint>
+            
+
+    <camelContext xmlns="http://camel.apache.org/schema/blueprint" 
+                  xmlns:soap="http://www.w3.org/2003/05/soap-envelope" 
+                  xsi:schemaLocation="http://camel.apache.org/schema/blueprint 
+                    http://camel.apache.org/schema/blueprint/camel-blueprint.xsd"
+                  id="orders-context">
+
+        <route id="orders">
+            <from uri="from-webshop-ws"/>
+            <to uri="to-erp-ws"/>
+        </route>
+
+        <route id="status">
+            <from uri="from-erp-ws"/>
+            <to uri="to-webshop-ws"/>
+        </route>
+
+    </camelContext>
+</blueprint>
