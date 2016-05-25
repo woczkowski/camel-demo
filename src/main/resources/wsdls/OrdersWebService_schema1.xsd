@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" targetNamespace="http://orders.itkontekst.pl/" xmlns:tns="http://orders.itkontekst.pl/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="findByNumber" nillable="true" type="tns:findByNumber"/>
+
+  <xs:element name="findByNumberResponse" nillable="true" type="tns:findByNumberResponse"/>
+
+  <xs:element name="placeOrder" nillable="true" type="tns:placeOrder"/>
+
+  <xs:element name="placeOrderResponse" nillable="true" type="tns:placeOrderResponse"/>
+
+  <xs:complexType name="findByNumber">
+    <xs:sequence>
+      <xs:element name="orderNumber" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="findByNumberResponse">
+    <xs:sequence>
+      <xs:element name="return" type="tns:orderResult" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="orderResult">
+    <xs:complexContent>
+      <xs:extension base="tns:result">
+        <xs:sequence>
+          <xs:element name="order" type="tns:order" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="result">
+    <xs:sequence/>
+  </xs:complexType>
+
+  <xs:complexType name="order">
+    <xs:sequence>
+      <xs:element name="createdAt" type="xs:dateTime" minOccurs="0"/>
+      <xs:element name="createdBy" type="tns:user" minOccurs="0"/>
+      <xs:element name="customer" type="tns:customer" minOccurs="0"/>
+      <xs:element name="items" type="tns:orderItem" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="orderNumber" type="xs:string" minOccurs="0"/>
+      <xs:element name="orderStatus" type="xs:string" minOccurs="0"/>
+      <xs:element name="shippingAddress" type="tns:address" minOccurs="0"/>
+      <xs:element name="totalPrice" type="tns:price" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="user">
+    <xs:sequence>
+      <xs:element name="login" type="xs:string" minOccurs="0"/>
+      <xs:element name="personalInfo" type="tns:personalInfo" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="personalInfo">
+    <xs:sequence>
+      <xs:element name="email" type="xs:string" minOccurs="0"/>
+      <xs:element name="firstName" type="xs:string" minOccurs="0"/>
+      <xs:element name="lastName" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="customer">
+    <xs:sequence>
+      <xs:element name="contactAddress" type="tns:address" minOccurs="0"/>
+      <xs:element name="personalInfo" type="tns:personalInfo" minOccurs="0"/>
+      <xs:element name="phone" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="address">
+    <xs:sequence>
+      <xs:element name="city" type="xs:string" minOccurs="0"/>
+      <xs:element name="flatNumber" type="xs:string" minOccurs="0"/>
+      <xs:element name="homeNumber" type="xs:string" minOccurs="0"/>
+      <xs:element name="street" type="xs:string" minOccurs="0"/>
+      <xs:element name="zipCode" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="orderItem">
+    <xs:sequence>
+      <xs:element name="product" type="tns:product" minOccurs="0"/>
+      <xs:element name="quantity" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="unitPrice" type="tns:price" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="product">
+    <xs:sequence>
+      <xs:element name="productCode" type="xs:string" minOccurs="0"/>
+      <xs:element name="productName" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="price">
+    <xs:sequence>
+      <xs:element name="amount" type="xs:decimal" minOccurs="0"/>
+      <xs:element name="currency" type="xs:string" minOccurs="0"/>
+      <xs:element name="taxAmount" type="xs:decimal" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="placeOrder">
+    <xs:sequence>
+      <xs:element name="order" type="tns:order" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="placeOrderResponse">
+    <xs:sequence>
+      <xs:element name="return" type="tns:result" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>
+
