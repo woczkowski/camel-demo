@@ -42,12 +42,12 @@
             <entry key="dataFormat" value="PAYLOAD"/>
         </camel-cxf:properties>
     </camel-cxf:cxfEndpoint>
-
+            
     <camelContext xmlns="http://camel.apache.org/schema/blueprint" 
                   xmlns:soap="http://www.w3.org/2003/05/soap-envelope" 
                   xsi:schemaLocation="http://camel.apache.org/schema/blueprint 
                     http://camel.apache.org/schema/blueprint/camel-blueprint.xsd"
-                  id="orders-context">
+                  id="orders-context" streamCache="true">
 
         <errorHandler id="orders-error-handler-dlq" 
                       type="DeadLetterChannel" 
@@ -87,6 +87,7 @@
         <route id="status-in">
             <from uri="from-erp-ws"/>
             <inOnly uri="activemq://statusQueue"/>
+            <inOnly uri="activemq://smsStatusQueue"/>
             <setBody>
                 <constant>
 <![CDATA[
@@ -103,5 +104,29 @@
             <to uri="to-webshop-ws"/>
         </route>
 
+        <route id="sms-status">
+            <from uri="activemq://smsStatusQueue"/>
+            <removeHeaders pattern="*"/>
+            <to uri="xslt:xslt/statusToFindOrder.xsl"/>
+            <setHeader headerName="operationName">
+                <constant>findByNumber</constant>
+            </setHeader> 
+            <to uri="to-erp-ws"/>
+            <setHeader headerName="sms-msisdn" >
+                <xpath resultType="String">//return/order/customer/phone</xpath>
+            </setHeader>
+            <setHeader headerName="sms-status">
+                <xpath resultType="String">//orderStatus</xpath>
+            </setHeader>
+            <setHeader headerName="sms-order-number">
+                <xpath resultType="String">//orderNumber</xpath>
+            </setHeader>
+            <to uri="velocity:vm/sendsms.vm"/>
+            <removeHeaders pattern="*"/>
+            <setHeader headerName="Content-Type">
+                <constant>application/json</constant>
+            </setHeader>
+            <to uri="http://localhost:8084/sms/message"/>
+        </route>
     </camelContext>
 </blueprint>
