@@ -6,7 +6,9 @@
 
     <xsl:template match="/">
       <ord:findByNumber>
-         <orderNumber><xsl:value-of select="//stat:updateStatus/orderNumber"/></orderNumber>
+         <orderNumber>
+             <xsl:value-of select="//stat:updateStatus/orderNumber"/>
+         </orderNumber>
       </ord:findByNumber>
     </xsl:template>
 
