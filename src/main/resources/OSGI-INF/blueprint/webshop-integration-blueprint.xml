@@ -42,7 +42,10 @@
             <entry key="dataFormat" value="PAYLOAD"/>
         </camel-cxf:properties>
     </camel-cxf:cxfEndpoint>
-            
+
+    <bean id="inMemoryRepository" 
+          class="org.apache.camel.processor.idempotent.MemoryIdempotentRepository"/>        
+
     <camelContext xmlns="http://camel.apache.org/schema/blueprint" 
                   xmlns:soap="http://www.w3.org/2003/05/soap-envelope" 
                   xsi:schemaLocation="http://camel.apache.org/schema/blueprint 
@@ -121,12 +124,18 @@
             <setHeader headerName="sms-order-number">
                 <xpath resultType="String">//orderNumber</xpath>
             </setHeader>
-            <to uri="velocity:vm/sendsms.vm"/>
-            <removeHeaders pattern="*"/>
-            <setHeader headerName="Content-Type">
-                <constant>application/json</constant>
+            <setHeader headerName="sms-message-id">
+                <simple>${header.sms-msisdn}-${header.sms-order-number}-${header.sms-status}</simple>
             </setHeader>
-            <to uri="http://localhost:8084/sms/message"/>
+            <to uri="velocity:vm/sendsms.vm"/>
+            <idempotentConsumer messageIdRepositoryRef="inMemoryRepository">
+                <header>sms-message-id</header>
+                <removeHeaders pattern="*"/>
+                <setHeader headerName="Content-Type">
+                    <constant>application/json</constant>
+                </setHeader>
+                <to uri="http://localhost:8084/sms/message"/>
+            </idempotentConsumer>
         </route>
     </camelContext>
 </blueprint>
