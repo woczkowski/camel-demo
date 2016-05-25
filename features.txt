@@ -1,0 +1,4 @@
+feature:repo-add hawtio 1.4.64
+feature:install hawtio-core
+feature:install camel-velocity
+feature:install camel-http
