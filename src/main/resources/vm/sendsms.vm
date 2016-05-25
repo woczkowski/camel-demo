@@ -1,5 +1,0 @@
-#set( $statusMap = {"CREATED" : "Utworzone", "SENT" : "Wysłane"})
-{
-    "msisdn":"${headers.sms-msisdn}"
-    "message":"Twoje zamówienie o nr: ${headers.sms-order-number} zmieniło status na: $statusMap.get(${headers.sms-status})"
-}
