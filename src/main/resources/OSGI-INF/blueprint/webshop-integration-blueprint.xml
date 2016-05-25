@@ -42,14 +42,40 @@
             <entry key="dataFormat" value="PAYLOAD"/>
         </camel-cxf:properties>
     </camel-cxf:cxfEndpoint>
-            
+
+    <bean id="inMemoryRepository" 
+          class="org.apache.camel.processor.idempotent.MemoryIdempotentRepository"/>        
+
     <camelContext xmlns="http://camel.apache.org/schema/blueprint" 
                   xmlns:soap="http://www.w3.org/2003/05/soap-envelope" 
                   xsi:schemaLocation="http://camel.apache.org/schema/blueprint 
                     http://camel.apache.org/schema/blueprint/camel-blueprint.xsd"
-                  id="orders-context"
-    >
+                  id="orders-context" streamCache="true">
+        
+        <errorHandler id="orders-error-handler-dlq" 
+                      type="DeadLetterChannel" 
+                      deadLetterUri="activemq://DLQ.ordersQueue" 
+                      useOriginalMessage="true">
+            <redeliveryPolicy maximumRedeliveries="6" 
+                              delayPattern="0:1000;3:5000;5:10000"/>
+        </errorHandler>
 
+        <errorHandler id="status-error-handler-dlq" 
+                      type="DeadLetterChannel" 
+                      deadLetterUri="activemq://DLQ.statusQueue" 
+                      useOriginalMessage="true">
+            <redeliveryPolicy maximumRedeliveries="6" 
+                              delayPattern="0:1000;3:5000;5:10000"/>
+        </errorHandler>
+        
+        <restConfiguration component="jetty" host="localhost" port="8085"/>
+        
+        <rest path="/api">
+            <post uri="/orders">
+                <to uri="direct:placeOrders"/>
+            </post>
+        </rest>
+                
         <route id="orders-in">
             <from uri="from-webshop-ws"/>
             <inOnly uri="activemq://ordersQueue"/>
@@ -64,7 +90,7 @@
             </setBody>
         </route>
 
-        <route id="orders-out">
+        <route id="orders-out" errorHandlerRef="orders-error-handler-dlq">
             <from uri="activemq://ordersQueue"/>
             <to uri="to-erp-ws"/>
         </route>
@@ -72,6 +98,7 @@
         <route id="status-in">
             <from uri="from-erp-ws"/>
             <inOnly uri="activemq://statusQueue"/>
+            <inOnly uri="activemq://smsStatusQueue"/>
             <setBody>
                 <constant>
 <![CDATA[
@@ -83,10 +110,58 @@
             </setBody>        
         </route>
 
-        <route id="status-out">
+        <route id="status-out" errorHandlerRef="status-error-handler-dlq">
             <from uri="activemq://statusQueue"/>
             <to uri="to-webshop-ws"/>
         </route>
 
+        <route id="sms-status">
+            <from uri="activemq://smsStatusQueue"/>
+            <removeHeaders pattern="*"/>
+            <to uri="xslt:xslt/statusToFindOrder.xsl"/>
+            <setHeader headerName="operationName">
+                <constant>findByNumber</constant>
+            </setHeader> 
+            <to uri="to-erp-ws"/>
+            <setHeader headerName="sms-msisdn" >
+                <xpath resultType="String">//return/order/customer/phone</xpath>
+            </setHeader>
+            <setHeader headerName="sms-status">
+                <xpath resultType="String">//orderStatus</xpath>
+            </setHeader>
+            <setHeader headerName="sms-order-number">
+                <xpath resultType="String">//orderNumber</xpath>
+            </setHeader>
+            <setHeader headerName="sms-message-id">
+                <simple>${header.sms-msisdn}-${header.sms-order-number}-${header.sms-status}</simple>
+            </setHeader>
+            <to uri="velocity:vm/sendsms.vm"/>
+            <idempotentConsumer messageIdRepositoryRef="inMemoryRepository">
+                <header>sms-message-id</header>
+                <removeHeaders pattern="*"/>
+                <setHeader headerName="Content-Type">
+                    <constant>application/json</constant>
+                </setHeader>
+                <to uri="http://localhost:8084/sms/message"/>
+            </idempotentConsumer>
+        </route>
+
+        <route id="orders-in-rest">
+            <from uri="direct:placeOrders"/>
+            <split>
+                <xpath>/orders/order</xpath>
+                <to uri="xslt:xslt/wrapOrder.xsl"/>
+                <to uri="activemq://ordersQueue"/>
+            </split>
+            <setBody>
+                <constant>
+<![CDATA[
+                    <return/>
+]]> 
+                </constant>
+            </setBody>        
+        </route>
+        
+                        
     </camelContext>
 </blueprint>
