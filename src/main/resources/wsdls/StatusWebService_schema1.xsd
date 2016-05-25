@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" targetNamespace="http://status.itkontekst.pl/" xmlns:tns="http://status.itkontekst.pl/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="updateStatus" nillable="true" type="tns:updateStatus"/>
+
+  <xs:element name="updateStatusResponse" nillable="true" type="tns:updateStatusResponse"/>
+
+  <xs:complexType name="updateStatus">
+    <xs:sequence>
+      <xs:element name="orderNumber" type="xs:string" minOccurs="0"/>
+      <xs:element name="orderStatus" type="tns:orderStatusType" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="updateStatusResponse">
+    <xs:sequence>
+      <xs:element name="return" type="tns:result" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="result">
+    <xs:sequence/>
+  </xs:complexType>
+
+  <xs:simpleType name="orderStatusType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="CREATED"/>
+      <xs:enumeration value="VALIDATED"/>
+      <xs:enumeration value="COMPLEATED"/>
+      <xs:enumeration value="SENT"/>
+      <xs:enumeration value="RECEIVED"/>
+      <xs:enumeration value="RESIGNED"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
+
